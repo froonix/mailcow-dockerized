@@ -233,7 +233,7 @@ class IPTables:
       # insert mailcow isolation exception rule
       if _allow != "":
         rule = iptc.Rule()
-        rule_allow.src = _allow
+        rule.src = _allow
         rule.in_interface = f'! {_interface}'
         rule.out_interface = _interface
         rule.protocol = 'tcp'
