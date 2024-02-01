@@ -28,6 +28,7 @@ bans = {}
 quit_now = False
 exit_code = 0
 lock = Lock()
+chain_name = "MAILCOW"
 r = None
 
 
@@ -384,10 +385,10 @@ if __name__ == '__main__':
   backend = sys.argv[1]
   if backend == "nftables":
     logger.logInfo('Using NFTables backend')
-    tables = NFTables("MAILCOW", logger)
+    tables = NFTables(chain_name, logger)
   else:
     logger.logInfo('Using IPTables backend')
-    tables = IPTables("MAILCOW", logger)
+    tables = IPTables(chain_name, logger)
 
   # In case a previous session was killed without cleanup
   clear()
@@ -398,8 +399,11 @@ if __name__ == '__main__':
   tables.initChainIPv4()
   tables.initChainIPv6()
 
-  logger.logInfo("Setting MAILCOW isolation")
-  tables.create_docker_user_rule("br-mailcow", [3306, 6379, 8983, 12345])
+  if os.getenv("DISABLE_NETFILTER_ISOLATION_RULE").lower() in ("y", "yes"):
+    logger.logInfo(f"Skipping {chain_name} isolation")
+  else:
+    logger.logInfo(f"Setting {chain_name} isolation")
+    tables.create_mailcow_isolation_rule("br-mailcow", [3306, 6379, 8983, 12345], os.getenv("MAILCOW_REPLICA_IP"))
 
   # connect to redis
   while True:
